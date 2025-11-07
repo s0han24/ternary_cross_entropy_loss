@@ -1,0 +1,39 @@
+-- APA paper did not provide the dataset directly
+-- CAmbigNQ dataset : consists of ambigous questions + clarifying questions + (some possible answers and what questions to ask to get those answers)
+-- AmbigQA dataset : consists of questions + (some possible interpretations + answers) : NO Clarifying question present
+
+current dataset idea::
+some dataset entry example: 
+id: 0001,
+prompt: Can you tell me about Java?,
+candidate_response: Java is an island in Indonesia.,
+label: 0,
+domain: general knowledge,
+split: train
+
+id: 0002,
+prompt: Can you tell me about Java?,
+candidate_response: Do you mean Java the programming language or the island in Indonesia?,
+label: 1,
+domain: general knowledge,
+split: train
+
+
+Possible Input-Output Pairs:
+
+      Input          -        Output                       -          Label
+Ambigious Question   - Presumptuous Answer                 -            0
+Ambigious Question   - Clarifying Question                 -            1
+Unambigious Question - Directly answered                   -            1
+Unambigious Question - Unneccessary Clarifying Question    -            0
+
+
+Type 1 : take entires from AMbigQA with multipleQAs, choose any answer at random : {Question, Presumptuous answer, 0}
+Type 2 : take entries from CAmbigNQ : {Question, Clarifying Question, 1}
+Type 3 : take entries from AmbigQA with singleAnswer : {Question , Answer, 1}
+Type 4 : take entries from AmbigQA with singleAnswer + ask AI to create a disambiguated question : {Question, disambiguated question, 0}
+
+About class imbalances:
+KTO is robust to class imbalance - we might have to tune lamba_D and lambda_U as per the KTO paper ig..
+
+In the proposal we mentioned we will have questions spanning multiple domains... need to somehow create the dataset for that i guess + idk how KTO adapts to this sort of class imbalance.
