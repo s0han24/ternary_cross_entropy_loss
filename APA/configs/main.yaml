@@ -1,0 +1,54 @@
+
+seed: 1234
+logging_level: INFO
+
+model:
+  name: meta-llama/Llama-3.1-8B
+  offload_path: /scratch/sujay/hf_cache/offload/
+  cache_path: /scratch/sujay/hf_cache/
+  tensor_parallel_size: 1
+
+path: 
+  data: /home/sujayb/benchmarks/APA/dataset/
+  output: /home/sujayb/benchmarks/APA/output/
+  log: /home/sujayb/benchmarks/APA/log/
+
+
+dataset:
+  name: ambigqa
+
+
+pipeline:
+  stage_index: 0
+
+  explicit:
+    template_id: 0
+    evaluation_method: rouge
+    correct_threshold: 0.3
+
+  implicit:
+    method_id: 0
+    disambiguation_template_id: 0
+    generation_template_id: 0
+    threshold: 0.1
+    aggregate_method: 'mean'
+
+  explanation:
+    template_id: 0
+
+generation:
+  num_generations_per_prompt: 3
+  num_single_generation: 3
+  max_new_tokens: 100 
+  temperature: 1.0
+
+
+ablation_methods: [0, 1, 2]
+
+
+train:
+  num_train_epochs: 2
+  per_device_train_batch_size: 8
+  gradient_accumulation_steps: 2
+  learning_rate: 0.001
+  
