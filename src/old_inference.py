@@ -9,7 +9,6 @@ from datasets import Dataset
 
 import torch
 from transformers import DataCollatorForLanguageModeling, AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
-from peft.peft_model import PeftModel
 from accelerate import Accelerator, PartialState
 
 from hf_models import generate_and_score
@@ -267,16 +266,16 @@ def main(args):
 
     # LOADING MODEL AND TOKENIZER
     if args.model == 'llama3':
-        args.base_model = 'meta-llama/Llama-3.1-8B-Instruct'
+        args.base_model = 'meta-llama/Llama-3.2-3B-Instruct'
     elif args.model == 'gemma':
         args.base_model = 'google/gemma-7b'
+    elif args.model == 'llama3-ft':
+        args.base_model = '/scratch/sujayb/anlp/clarifying_questions/final_fix/final_kto_model_merged'
     else:
         raise ValueError('Invalid base_model')
 
-    tokenizer = AutoTokenizer.from_pretrained(args.base_model)
+    tokenizer = AutoTokenizer.from_pretrained(args.base_model, dtype=torch.float32)
     tokenizer.pad_token = tokenizer.eos_token
-    tokenizer.padding_side = "left"
-    tokenizer.truncation_side = "left"
 
     bnb_config = BitsAndBytesConfig(
         load_in_8bit=True,
@@ -297,28 +296,17 @@ def main(args):
         # quantization_config=bnb_config if torch.cuda.is_available() else None,
         # device_map={'': distributed_state.process_index} if torch.cuda.is_available() else None,
         device_map="auto" if torch.cuda.is_available() else None,
-        torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
+        dtype=torch.float32,
     )
     
     # If CUDA is not available or device_map didn't work, manually move to device
     if not torch.cuda.is_available():
         print("WARNING: CUDA not available, using CPU")
     else:
-        print(f"Model loaded on GPU: {next(model.parameters()).device}")
-
-    # Only load checkpoint adapter if checkpoint is provided
-    checkpoint_dir = os.path.join(args.checkpoint)
-    # if args.adapter:
-    #     checkpoint_dir = os.path.join(checkpoint_dir, args.adapter)
-    model = PeftModel.from_pretrained(
-        model,
-        checkpoint_dir,
-        is_trainable=False,
-    )
-
+        print(f"Model loaded on GPU: {next(model.parameters()).device}")     
+    
     for ex in data:
         if 'pred' not in ex:
-            print(ex)
             ex['pred'] = {}
 
     if args.mode == 'respond':
@@ -476,8 +464,8 @@ if __name__ == '__main__':
     parser.add_argument('--shard_total', type=int, default=None)
 
     # MODEL SETUP
-    parser.add_argument('--model', default='llama3')
-    parser.add_argument('--checkpoint', default='/scratch/sujayb/anlp/clarifying_questions/sujay_fix/kto_results/checkpoint-795')
+    parser.add_argument('--model', default='llama3-ft')
+    parser.add_argument('--checkpoint', default=None)
     parser.add_argument('--merge_checkpoint', default=None)
     parser.add_argument('--merge_checkpoint_2', default=None)
     parser.add_argument('--adapter', default=None)
@@ -485,7 +473,7 @@ if __name__ == '__main__':
 
     # EVAL HYPERPARAMETERS
     parser.add_argument('--batch_size', type=int, default=64, help='Batch size for inference (increase for better GPU utilization)')
-    parser.add_argument('--max_length', type=int, default=512)
+    parser.add_argument('--max_length', type=int, default=128, help='Maximum generation length')
     parser.add_argument('--test', type=int, default=None)
 
     # MISC

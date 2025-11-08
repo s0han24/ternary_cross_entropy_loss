@@ -1,12 +1,8 @@
 DPO_1_merged/
 
-sujay_fix/
-
 verify.json
 
 command.txt
-
-merger.py
 
 */__pycache__/
 
@@ -19,3 +15,10 @@ old_data/
 final_outputs/
 
 APA/outputs/
+
+final_fix/final_dpo_model_merged/
+final_fix/final_kto_model_merged/
+final_fix/final_model_merged/
+final_fix/sft_final_model/
+final_fix/dpo_results_1
+final_fix/kto_results_1
